@@ -1,38 +1,40 @@
 {
-  "name": "ui-driver-skel",
-  "version": "0.0.2",
-  "description": "Skeleton Rancher UI driver for custom docker-machine drivers",
+  "name": "ui-driver-vultr",
+  "version": "0.0.1",
+  "description": "Rancher UI driver for Vultr docker-machine driver",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rancher/ui-driver-skel.git"
+    "url": "git+https://github.com/vultr/rancher-ui-driver-vultr.git"
   },
-  "author": "Rancher Labs, Inc.",
+  "author": "Vultr",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/rancher/rancher/issues"
+    "url": "https://github.com/vultr/rancher-ui-driver-vultr/issues"
   },
   "scripts": {
     "start": "./node_modules/.bin/gulp server",
     "clean": "./node_modules/.bin/gulp clean",
     "build": "./node_modules/.bin/gulp build"
   },
-  "homepage": "https://github.com/rancher/ui-driver-skel#readme",
+  "homepage": "https://github.com/vultr/rancher-ui-driver-vultr#readme",
   "devDependencies": {
-    "@babel/core": "^7.2.2",
-    "babel-plugin-add-module-exports": "^1.0.0",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-transform-es2015-modules-amd": "^6.24.1",
-    "@babel/preset-env": "^7.2.3",
     "del": "3.0.0",
-    "gulp": "4.0.0",
+    "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
+    "gulp-bump": "^3.1.3",
     "gulp-clean": "0.4.0",
     "gulp-concat": "2.6.1",
     "gulp-connect": "5.7.0",
     "gulp-jshint": "2.1.0",
     "gulp-replace": "1.0.0",
     "gulp-sourcemaps": "2.6.4",
+    "inquirer": "^7.3.0",
     "jshint": "2.9.7",
     "replace-string": "^2.0.0",
-    "yargs": "12.0.5"
+    "yargs": "^15.3.1"
   }
 }

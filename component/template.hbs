@@ -1,34 +1,128 @@
 <section class="horizontal-form">
   {{#accordion-list showExpandAll=false as | al expandFn |}}
+   {{#if (eq step 1)}}
+      {{#accordion-list-item
+         title=(t "modalAddCloudKey.vultr.token.label")
+         detail=(t "modalAddCloudKey.vultr.token.help" htmlSafe=true)
+         expandAll=expandAll
+         expand=(action expandFn)
+         expandOnInit=true
+      }}
+        {{form-auth-cloud-credential
+          driverName=driverName
+          parseAndCollectErrors=(action "errorHandler")
+          primaryResource=primaryResource
+          cloudCredentials=cloudCredentials
+          finishAndSelectCloudCredential=(action "finishAndSelectCloudCredential")
+          progressStep=(action "authVultr")
+          cancel=(action "cancel")
+          createLabel="modalAddCloudKey.vultr.authAccountButton"
+        }}
+      {{/accordion-list-item}}
+    {{top-errors errors=errors}}
+  {{else}}
+  {{#accordion-list showExpandAll=false as | al expandFn |}}
     {{!-- This line shows the driver title which you don't have to change it --}}
-    <div class="over-hr mb-20"><span>{{driverOptionsTitle}}</span></div>
+    <div class="over-hr"><span>{{driverOptionsTitle}}</span></div>
+      {{#accordion-list-item
+        title="Instance Options"
+        detail="Configure the options for the Vultr Instances that will be created by this template."
+        expandAll=expandAll
+        expand=(action expandFn)
+        expandOnInit=true
+      }}
+      {{!-- Start of Vultr Options --}}
+        <div class="row">
+          <div class="col span-6">
+            <label class="acc-label">Region</label>
+            <select class="form-control" onchange={{action (mut model.vultrConfig.region) value="target.value" }}>
+              {{#each regionChoices as |choice|}}
+                <option value={{choice.id}} selected={{eq model.vultrConfig.region choice.id}}>{{choice.label}}</option>
+              {{/each}}
+            </select>
+          </div>
 
-    {{!-- An example input option --}}
-    <div class="row box mt-20">
-      <h4>Instance Options</h4>
-      <div class="row">
-        <div class="col span-2 col-inline">
-          <label>CPUs</label>
-        </div>
-
-        <div class="col span-1">
-          {{config.cpuCount}}
-        </div>
-        <div class="col span-3">
-          {{input-slider value=config.cpuCount valueMin=1 valueMax=32}}
-        </div>
-
-        <div class="col span-2 col-inline">
-          <label>Memory Size</label>
-        </div>
-        <div class="col span-4">
-          <div class="input-group">
-            {{input-integer min=1 value=config.memorySize classNames="form-control"}}
-            <div class="input-group-addon bg-default">MB</div>
+          <div class="col span-6">
+            <label class="acc-label">Instance Type</label>
+            <select class="form-control" onchange={{action (mut model.vultrConfig.instanceType) value="target.value" }}>
+              {{#each sizeChoices as |choice|}}
+                <option value={{choice.id}} selected={{eq model.vultrConfig.instanceType choice.id}}>{{choice.label}} - {{choice.vcpus}} vCPUs, {{choice.memory}}GB Memory, {{choice.disk}}GB Disk space</option>
+              {{/each}}
+            </select>
           </div>
         </div>
-      </div>
-    </div>
+        <div class="row">
+          <div class="col span-6">
+            <label class="acc-label">Image</label>
+            <select class="form-control" onchange={{action (mut model.vultrConfig.image) value="target.value" }}>
+              {{#each imageChoices as |choice|}}
+                <option value={{choice.id}} selected={{eq model.vultrConfig.image choice.id}}>{{choice.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          {{#unless profile.restricted }}
+            <div class="col span-6">
+              <label class="acc-label">Tags</label>
+              {{ input classNames="form-control" placeholder="Examples: tagA, tagB, tagC" value=model.vultrConfig.tags }}
+            </div>
+          {{/unless}}
+        </div>
+        <div class="row">
+          <div class="col span-6">
+            <label class="acc-label">Private IP</label>
+            <div class="checkbox">
+              <label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.createPrivateIp}} Add a Private IP</label>
+            </div>
+          </div>
+        </div>
+      {{/accordion-list-item}}
+      {{!-- End of Vultr Options --}}
+      {{#accordion-list-item
+        title="Authentication"
+        detail="Configure Vultr user SSH Keys and a password for the 'root' user account"
+        expandAll=expandAll
+        expand=(action expandFn)
+        expandOnInit=false
+      }}
+        <div class="row">
+          <div class="col span-12">
+            <label class="acc-label">Password for the "root" user</label>
+            {{ input
+              type="password"
+              classNames="form-control"
+              value=model.vultrConfig.rootPass
+              placeholder="aComplexP@ssword"
+            }}
+          </div>
+          <div class="col span-12">
+            <label class="acc-label">Vultr Usernames</label>
+            {{ input classNames="form-control" placeholder="yourusername" value=model.vultrConfig.authorizedUsers }}
+          </div>
+        </div>
+      {{/accordion-list-item}}
+      {{#accordion-list-item
+        title="StackScripts"
+        detail="Configure a StackScript to run on first boot"
+        expandAll=expandAll
+        expand=(action expandFn)
+        expandOnInit=false
+      }}
+        <div class="row">
+          <div class="col span-12">
+            <label class="acc-label">StackScript (<a href="https://cloud.vultr.com/stackscripts" target="_blank" rel="nofollow noreferrer noopener">manage your StackScripts</a>)</label>
+            {{ input
+            classNames="form-control"
+            placeholder="Examples: 'username/Stackscript Label' or '12345'"
+            value=model.vultrConfig.stackscript
+            }}
+          </div>
+          <div class="col span-12">
+            <label class="acc-label">StackScript Variables</label>
+            {{ textarea classNames="form-control" placeholder='{ "example": "value", "json": true }' value=model.vultrConfig.stackscriptData }}
+          </div>
+        </div>
+      {{/accordion-list-item}}
+      {{!-- End of Vultr Options --}}
 
     {{!-- This following contains the Name, Labels and Engine Options fields --}}
     <div class="over-hr"><span>{{templateOptionsTitle}}</span></div>
@@ -51,9 +145,12 @@
     }}
   {{/accordion-list}}
 
+
   {{!-- This component shows errors produced by validate() in the component --}}
   {{top-errors errors=errors}}
 
   {{!-- This component shows the Create and Cancel buttons --}}
-  {{save-cancel save="save" cancel="cancel"}}
+  {{save-cancel save=(action "save") editing=editing cancel=(action "cancel")}}
+  {{/if}}
+  {{/accordion-list}}
 </section>

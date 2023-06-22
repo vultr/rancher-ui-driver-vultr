@@ -154,7 +154,7 @@ gulp.task('createArtifact', gulp.series(function () {
   const json = JSON.parse(fs.readFileSync('./package.json'));
   const version = `v${json.version}`;
 
-  return gulp.src(['./dist/*', './releases/v0.2.0/linode-addons.yml'])
+  return gulp.src(['./dist/*', './releases/v0.2.0/vultr-addons.yml'])
     .pipe(gulp.dest(`./releases/${version}`));
 }));
 
@@ -165,7 +165,7 @@ gulp.task('server', gulp.parallel(['build', 'watch'], function () {
   return gulpConnect.server({
     root: [DIST],
     port: process.env.PORT || 3000,
-    host: process.env.HOST || 'localhost',
+    host: process.env.HOST || '0.0.0.0',
     https: process.env.HTTPS || false,
   });
 }));

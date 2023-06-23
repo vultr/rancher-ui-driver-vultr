@@ -1,10 +1,13 @@
 /*!!!!!!!!!!!Do not change anything between here (the DRIVERNAME placeholder will be automatically replaced at buildtime)!!!!!!!!!!!*/
 import NodeDriver from 'shared/mixins/node-driver';
 
+// import uiConstants from 'ui/utils/constants'
+
 // do not remove LAYOUT, it is replaced at build time with a base64 representation of the template of the hbs template
 // we do this to avoid converting template to a js file that returns a string and the cors issues that would come along with that
 const LAYOUT;
 /*!!!!!!!!!!!DO NOT CHANGE END!!!!!!!!!!!*/
+
 
 /*!!!!!!!!!!!GLOBAL CONST START!!!!!!!!!!!*/
 // EMBER API Access - if you need access to any of the Ember API's add them here in the same manner rather then import them via modules, since the dependencies exist in rancher we dont want to expor the modules in the amd def
@@ -13,11 +16,7 @@ const get = Ember.get;
 const set = Ember.set;
 const alias = Ember.computed.alias;
 const service = Ember.inject.service;
-const observer = Ember.observer;
-const hash = Ember.RSVP.hash;
 
-const defaultRadix = 10;
-const defaultBase = 1024;
 /*!!!!!!!!!!!GLOBAL CONST END!!!!!!!!!!!*/
 
 
@@ -25,39 +24,51 @@ const defaultBase = 1024;
 /*!!!!!!!!!!!DO NOT CHANGE START!!!!!!!!!!!*/
 export default Ember.Component.extend(NodeDriver, {
   driverName: '%%DRIVERNAME%%',
-  step: 1,
+  needAPIToken: true,
   config: alias('model.%%DRIVERNAME%%Config'),
   app: service(),
-  intl: service(),
-  vultr: service(),
+
   init() {
     // This does on the fly template compiling, if you mess with this :cry:
     const decodedLayout = window.atob(LAYOUT);
     const template = Ember.HTMLBars.compile(decodedLayout, {
       moduleName: 'nodes/components/driver-%%DRIVERNAME%%/template'
     });
-
     set(this, 'layout', template);
 
     this._super(...arguments);
 
   },
   /*!!!!!!!!!!!DO NOT CHANGE END!!!!!!!!!!!*/
+
   // Write your component here, starting with setting 'model' to a machine with your config populated
   bootstrap: function () {
     // bootstrap is called by rancher ui on 'init', you're better off doing your setup here rather then the init function to ensure everything is setup correctly
     let config = get(this, 'globalStore').createRecord({
       type: '%%DRIVERNAME%%Config',
-      instanceType: 'g6-standard-4', // 4 GB Ram
-      region: 'us-east', // Newark
-      image: 'vultr/ubuntu18.04', // 10 year support from Ubuntu
-      uaPrefix: 'Rancher',
-      tags: '',
-      authorizedUsers: '',
-      createPrivateIp: true,
-      stackscript: '',
-      stackscriptData: '',
-      rootPass: null,
+      additionalKey: [],
+      region: "ewr",
+	  "vps-plan": "vc2-1c-2gb",
+	  tags: "",
+	  "os-id": 387,
+	  "iso-id": "",
+	  "app-id": 0,
+	  "image-id": "",
+	  "firewall-group-id": "",
+	  "ipxe-chain-url": "",
+	  "startup-script-id": "",
+	  "enabled-ipv6": true,
+	  "enable-vpc": false,
+	  "vpc-ids": "",
+	  "ssh-key-ids": "",
+	  "vps-backups": false,
+	  "ddos-protection": "",
+	  "cloud-init-user-data": "",
+	  "floating-ipv4-id": "",
+	  "send-activation-email": true,
+	  "docker-port": 2376,
+	  "disable-os-firewall": false,
+	  "ports-to-open-on-os-firewall": "22,80,443,2376,2379,2380,6443,9099,9796,10250,10254,30000:32767/tc,8472/udp",
     });
 
     set(this, 'model.%%DRIVERNAME%%Config', config);
@@ -67,25 +78,14 @@ export default Ember.Component.extend(NodeDriver, {
   validate() {
     // Get generic API validation errors
     this._super();
+
+    if (!this.get('model.%%DRIVERNAME%%Config.additionalKey')) {
+      this.set('model.%%DRIVERNAME%%Config.additionalKey', [])
+    }
+
     var errors = get(this, 'errors') || [];
     if (!get(this, 'model.name')) {
       errors.push('Name is required');
-    }
-
-    if (!this.get('model.%%DRIVERNAME%%Config.instanceType')) {
-      errors.push('Specifying a %%DRIVERNAME%% Instance Type is required');
-    }
-
-    if (!this.get('model.%%DRIVERNAME%%Config.image')) {
-      errors.push('Specifying a %%DRIVERNAME%% Image is required');
-    }
-
-    if (!this.get('model.%%DRIVERNAME%%Config.region')) {
-      errors.push('Specifying a %%DRIVERNAME%% Region is required');
-    }
-
-    if (!this.validateCloudCredentials()) {
-      errors.push(this.intl.t('nodeDriver.cloudCredentialError'));
     }
 
     // Set the array of errors for display,
@@ -98,48 +98,42 @@ export default Ember.Component.extend(NodeDriver, {
       return true;
     }
   },
-  // Any computed properties or custom logic can go here
   actions: {
-    finishAndSelectCloudCredential(cred) {
-      if (cred) {
-        set(this, 'model.cloudCredentialId', get(cred, 'id'));
-
-        this.send('authVultr');
-      }
-    },
-
-    authVultr(cb) {
-      const auth = {
-        type: 'cloud',
-        token: get(this, 'model.cloudCredentialId'),
-      };
-      hash({
-        regions: this.vultr.request(auth, 'regions'),
-        images: this.vultr.request(auth, 'images'),
-        sizes: this.vultr.request(auth, 'vultr/types'),
-      }).then((responses) => {
-        this.setProperties({
+    getData() {
+      this.set('gettingData', true);
+      let that = this;
+      Promise.all([this.apiRequest('/v2/regions'), this.apiRequest('/v2/regions/ewr/availability'), this.apiRequest('/v2/os')]).then(function (responses) {
+        that.setProperties({
           errors: [],
-          step: 2,
-          restricted: responses.regions.restricted,
-          regionChoices: responses.regions.data.map(region => { region.label = region.id.slice(0, 4).toUpperCase() + region.id.slice(4) + " (" + region.country.toUpperCase() + ")"; return region }).sort((a, b) => String.prototype.localeCompare(a, b)),
-          // Filter on valid images and ignore Kubernetes images
-          imageChoices: responses.images.data.filter(image => /^vultr.(ubuntu22.04|ubuntu20.04|ubuntu18.04|ubuntu16.04|debian10|debian9)/.test(image.id) && !image.id.includes('kube')).sort((a, b) => a.id > b.id),
-          sizeChoices: responses.sizes.data.map(size => { size.disk /= 1024; size.memory /= 1024; return size }),
+          needAPIToken: false,
+          gettingData: false,
+          regionChoices: responses[0].regions,
+		  planChoices: responses[1].available_plans,
+		  osChoices: responses[2].os
         });
-      }).catch((err) => {
-        let errors = get(this, 'errors') || [];
-
-        if (err && err.body && err.body.errors && err.body.errors[0]) {
-          errors.push(`Error received from Vultr: ${ err.body.errors[0].reason }`);
-        } else {
-          errors.push(`Error received from Vultr`);
-        }
-
-        this.setProperties({ errors, });
-
-        cb();
-      });
+      }).catch(function (err) {
+        err.then(function (msg) {
+          that.setProperties({
+            errors: ['Error received from Vultr: ' + msg.error.message],
+            gettingData: false
+          })
+        })
+      })
     },
+    setLabels: function(labels){
+      let labels_list = labels.map(l => l.key + "=" + l.value);
+      this.set('model.%%DRIVERNAME%%Config.serverLabel', labels_list);
+
+      this._super(labels);
+    },
+    modifyKeys: function (select) {
+      let options = [...select.target.options]
+        .filter(o => o.selected)
+        .map(o => this.keyChoices.find(keyChoice => keyChoice.id == o.value)["public_key"]);
+      this.set('model.%%DRIVERNAME%%Config.additionalKey', options);
+    },
+  },
+  apiRequest(path) {
+    return fetch('https://rancher-proxy.vultrlabs.dev' + path).then(res => res.ok ? res.json() : Promise.reject(res.json()));
   }
 });

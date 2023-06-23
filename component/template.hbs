@@ -1,156 +1,177 @@
 <section class="horizontal-form">
-  {{#accordion-list showExpandAll=false as | al expandFn |}}
-   {{#if (eq step 1)}}
-      {{#accordion-list-item
-         title=(t "modalAddCloudKey.vultr.token.label")
-         detail=(t "modalAddCloudKey.vultr.token.help" htmlSafe=true)
-         expandAll=expandAll
-         expand=(action expandFn)
-         expandOnInit=true
-      }}
-        {{form-auth-cloud-credential
-          driverName=driverName
-          parseAndCollectErrors=(action "errorHandler")
-          primaryResource=primaryResource
-          cloudCredentials=cloudCredentials
-          finishAndSelectCloudCredential=(action "finishAndSelectCloudCredential")
-          progressStep=(action "authVultr")
-          cancel=(action "cancel")
-          createLabel="modalAddCloudKey.vultr.authAccountButton"
-        }}
-      {{/accordion-list-item}}
+  {{#if needAPIToken}}
+  <form>
+    <div class="over-hr r-mb20">
+      <span>Account Access</span>
+    </div>
+    <div class="row">
+      <div class="col span-12">
+		<label class="acc-label">API Token*</label>
+        {{input type="password" value=model.vultrConfig.apiToken classNames="form-control" placeholder="Your Vultr API Token"}}
+        <p class="help-block">Create it by switching into the
+          <a target="_blank" rel="noopener noreferrer" href="https://my.vultr.com/settings/#settingsapi">Vultr Settings</a> and create a new API token there.</p>
+      </div>
+    </div>
     {{top-errors errors=errors}}
+    <div class="footer-actions">
+      {{#if gettingData}}
+      <button class="btn bg-primary btn-disabled">
+        <i class="icon icon-spinner icon-spin"></i> {{t 'generic.loading'}}</button>
+      {{else}}
+      <button {{action "getData" }} class="btn bg-primary" disabled={{not model.vultrConfig.apiToken}}>Configure Server</button>
+      {{/if}}
+      <button {{action "cancel"}} class="btn bg-transparent">{{t 'generic.cancel'}}</button>
+    </div>
+  </form>
   {{else}}
-  {{#accordion-list showExpandAll=false as | al expandFn |}}
-    {{!-- This line shows the driver title which you don't have to change it --}}
-    <div class="over-hr"><span>{{driverOptionsTitle}}</span></div>
-      {{#accordion-list-item
-        title="Instance Options"
-        detail="Configure the options for the Vultr Instances that will be created by this template."
-        expandAll=expandAll
-        expand=(action expandFn)
-        expandOnInit=true
-      }}
-      {{!-- Start of Vultr Options --}}
-        <div class="row">
-          <div class="col span-6">
-            <label class="acc-label">Region</label>
-            <select class="form-control" onchange={{action (mut model.vultrConfig.region) value="target.value" }}>
-              {{#each regionChoices as |choice|}}
-                <option value={{choice.id}} selected={{eq model.vultrConfig.region choice.id}}>{{choice.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-
-          <div class="col span-6">
-            <label class="acc-label">Instance Type</label>
-            <select class="form-control" onchange={{action (mut model.vultrConfig.instanceType) value="target.value" }}>
-              {{#each sizeChoices as |choice|}}
-                <option value={{choice.id}} selected={{eq model.vultrConfig.instanceType choice.id}}>{{choice.label}} - {{choice.vcpus}} vCPUs, {{choice.memory}}GB Memory, {{choice.disk}}GB Disk space</option>
-              {{/each}}
-            </select>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col span-6">
-            <label class="acc-label">Image</label>
-            <select class="form-control" onchange={{action (mut model.vultrConfig.image) value="target.value" }}>
-              {{#each imageChoices as |choice|}}
-                <option value={{choice.id}} selected={{eq model.vultrConfig.image choice.id}}>{{choice.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-          {{#unless profile.restricted }}
-            <div class="col span-6">
-              <label class="acc-label">Tags</label>
-              {{ input classNames="form-control" placeholder="Examples: tagA, tagB, tagC" value=model.vultrConfig.tags }}
-            </div>
-          {{/unless}}
-        </div>
-        <div class="row">
-          <div class="col span-6">
-            <label class="acc-label">Private IP</label>
-            <div class="checkbox">
-              <label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.createPrivateIp}} Add a Private IP</label>
-            </div>
-          </div>
-        </div>
-      {{/accordion-list-item}}
-      {{!-- End of Vultr Options --}}
-      {{#accordion-list-item
-        title="Authentication"
-        detail="Configure Vultr user SSH Keys and a password for the 'root' user account"
-        expandAll=expandAll
-        expand=(action expandFn)
-        expandOnInit=false
-      }}
-        <div class="row">
-          <div class="col span-12">
-            <label class="acc-label">Password for the "root" user</label>
-            {{ input
-              type="password"
-              classNames="form-control"
-              value=model.vultrConfig.rootPass
-              placeholder="aComplexP@ssword"
-            }}
-          </div>
-          <div class="col span-12">
-            <label class="acc-label">Vultr Usernames</label>
-            {{ input classNames="form-control" placeholder="yourusername" value=model.vultrConfig.authorizedUsers }}
-          </div>
-        </div>
-      {{/accordion-list-item}}
-      {{#accordion-list-item
-        title="StackScripts"
-        detail="Configure a StackScript to run on first boot"
-        expandAll=expandAll
-        expand=(action expandFn)
-        expandOnInit=false
-      }}
-        <div class="row">
-          <div class="col span-12">
-            <label class="acc-label">StackScript (<a href="https://cloud.vultr.com/stackscripts" target="_blank" rel="nofollow noreferrer noopener">manage your StackScripts</a>)</label>
-            {{ input
-            classNames="form-control"
-            placeholder="Examples: 'username/Stackscript Label' or '12345'"
-            value=model.vultrConfig.stackscript
-            }}
-          </div>
-          <div class="col span-12">
-            <label class="acc-label">StackScript Variables</label>
-            {{ textarea classNames="form-control" placeholder='{ "example": "value", "json": true }' value=model.vultrConfig.stackscriptData }}
-          </div>
-        </div>
-      {{/accordion-list-item}}
-      {{!-- End of Vultr Options --}}
-
-    {{!-- This following contains the Name, Labels and Engine Options fields --}}
-    <div class="over-hr"><span>{{templateOptionsTitle}}</span></div>
-
-    {{form-name-description
-      model=model
-      nameRequired=true
-    }}
-
-    {{form-user-labels
-      initialLabels=labelResource.labels
-      setLabels=(action 'setLabels')
-      expandAll=expandAll
-      expand=(action expandFn)
-    }}
-
-    {{form-engine-opts
-      machine=model
-      showEngineUrl=showEngineUrl
-    }}
-  {{/accordion-list}}
-
-
-  {{!-- This component shows errors produced by validate() in the component --}}
-  {{top-errors errors=errors}}
-
-  {{!-- This component shows the Create and Cancel buttons --}}
-  {{save-cancel save=(action "save") editing=editing cancel=(action "cancel")}}
+  <div class="container-fluid">
+    {{!-- This partial contains the quantity, name, and description fields --}}
+    <div class="over-hr r-mt20 r-mb20">
+      <span>Settings</span>
+    </div>
+    <div class="row">
+      <div class="col span-6">
+		<label class="acc-label">Region</label>
+        <select class="form-control" onchange={{action (mut model.vultrConfig.region) value="target.value" }}>
+          {{#each regionChoices as |choice|}}
+            <option value={{choice.id}} selected={{eq model.vultrConfig.region choice.id}}>{{choice.city}}</option>
+          {{/each}}
+        </select>
+      </div>
+	  <div class="col span-6">
+		<label class="acc-label">Plan</label>
+        <select class="form-control" onchange={{action (mut model.vultrConfig.vps-plan) value="target.value" }}>
+          {{#each planChoices as |choice|}}
+            <option value={{choice}} selected={{eq model.vultrConfig.vps-plan choice}}>{{choice}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+	<div class="row">
+		<div class="col span-6">
+			<label class="acc-label">Tags you'd like to attach to this resource</label>
+			{{input type="text" value=model.vultrConfig.tags }}
+		</div>
+		<div class="col span-6">
+			<label class="acc-label">Operating system ID (default: [387] Ubuntu 20.04)</label>
+        	<select class="form-control" onchange={{action (mut model.vultrConfig.os-id) value="target.value" }}>
+          	{{#each osChoices as |choice|}}
+            	<option value={{choice.id}} selected={{eq model.vultrConfig.os-id choice.id}}>{{choice.id}} - {{choice.name}}</option>
+          	{{/each}}
+        	</select>
+      </div>
+	</div>
+	<div class="row">
+		<div class="col span-6">
+			<label class="acc-label">ISO ID you'd like to boot this resource into</label>
+			{{input type="number" value=model.vultrConfig.iso-id }}
+		</div>
+		<div class="col span-6">
+			<label class="acc-label">App ID of the Vultr Marketplace App you'd like to deploy to this resource</label>
+			{{input type="number" value=model.vultrConfig.app-id placeholder="0" }}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col span-6">
+			<label class="acc-label">IPXE Chain URL you'd like to boot this resource to</label>
+			{{input type="text" value=model.vultrConfig.ipxe-chain-url }}
+		</div>
+		<div class="col span-6">
+			<label class="acc-label">Startup Script ID vou'd like to run on this resource after boot</label>
+			{{input type="number" value=model.vultrConfig.startup-script-id }}
+		</div>
+	</div>
+	<div class="row">
+      <div class="col span-6">
+		<label class="acc-label">VPC IDs you want to attach to this resource</label>
+		{{input type="text" value=model.vultrConfig.vpc-ids }}
+	  </div>
+	  <div class="col span-6">
+			<label class="acc-label">SSH Key IDs you'd like installed on this resource (default: Generated)</label>
+			{{input type="text" value=model.vultrConfig.ssh-key-ids }}
+	  </div>
+    </div>
+	<div class="row">
+		<div class="col span-4">
+			<label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.vps-backups }}
+				Enable automatic backups of this VPS
+			</label>
+		</div>
+		<div class="col span-4">
+			<label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.ddos-protection}}
+				Enable DDOS Protection
+			</label>
+		</div>
+		<div class="col span-4">
+			<label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.send-activation-email}}
+				Send Activation Email
+			</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col span-4">
+			<div class="checkbox">
+				<label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.enabled-ipv6}}
+					Enable IPv6
+				</label>
+			</div>
+		</div>
+		<div class="col span-4">
+			<div class="checkbox">
+				<label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.enable-vpc}}
+					Enable VPC
+				</label>
+			</div>
+		</div>
+		<div class="col span-4">
+			<div class="checkbox">
+				<label class="acc-label">{{input type="checkbox" checked=model.vultrConfig.disable-os-firewall}}
+					Disable the UFW firewall
+				</label>
+			</div>
+		</div>
+	</div>
+    <div class="row">
+      <div class="col span-6">
+        <label class="acc-label">Pass base64 encoded cloud-init user data to this resource</label>
+        <textarea value={{model.vultrConfig.cloud-init-user-data}} onchange={{action (mut model.vultrConfig.cloud-init-user-data) value="target.value" }} rows="1" style="width: 100%; resize: vertical"></textarea>
+      </div>
+      <div class="col span-6">
+		<label class="acc-label">Firewall Group ID you'd like to attach this resource to</label>
+		{{input type="text" value=model.vultrConfig.firewall-group-id }}
+	  </div>
+    </div>
+	 <div class="row">
+		<div class="col span-6">
+			<label class="acc-label">ID of the floating/reserved IPV4 address to use as the main IP of this resource</label>
+			{{input type="text" value=model.vultrConfig.floating-ipv4-id }}
+	  	</div>
+		<div class="col span-6">
+			<label class="acc-label">Specific Image ID of the Vultr Marketplace App you'd like to deploy</label>
+			{{input type="text" value=model.vultrConfig.image-id }}
+	  	</div>
+	 </div>
+	 <div class="row">
+		<div class="col span-6">
+			<label class="acc-label">Port the docker machine will host on (default: 2376)</label>
+			{{input type="text" value=model.vultrConfig.docker-port }}
+	  	</div>
+		<div class="col span-6">
+			<label class="acc-label">Comma delimited list of ports to open on the UFW firewall</label>
+			{{input type="text" value=model.vultrConfig.ports-to-open-on-os-firewall }}
+	  	</div>
+	 </div>
+	<div class="over-hr">
+    	<span>{{templateOptionsTitle}}</span>
+  	</div>
+     {{!-- This following contains the Name, Labels and Engine Options fields --}}
+     {{form-name-description model=model nameRequired=true}}
+     {{form-user-labels initialLabels=labelResource.labels setLabels=(action 'setLabels') expandAll=expandAll expand=(action expandFn) }}
+     {{form-engine-opts machine=model showEngineUrl=showEngineUrl }}
+     {{!-- This component shows errors produced by validate() in the component --}}
+     {{top-errors errors=errors}}
+     {{!-- This component shows the Create and Cancel buttons --}}
+     {{save-cancel save="save" cancel=(action "cancel")}}
+  </div>
   {{/if}}
-  {{/accordion-list}}
 </section>

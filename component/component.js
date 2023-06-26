@@ -62,9 +62,10 @@ export default Ember.Component.extend(NodeDriver, {
 	  "region": "ewr",
 	  "sendActivationEmail": false,
 	  "snapshotId": "",
+	  "sshKeyIds": null,
 	  "startupScriptId": "",
 	  "tags": null,
-	  "vpcId": "",
+	  "vpcIds": null,
 	  "vpsBackups": false,
 	  "vpsPlan": "vc2-1c-2gb"
     });

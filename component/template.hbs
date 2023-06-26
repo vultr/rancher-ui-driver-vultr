@@ -62,18 +62,24 @@
       </div>
 	</div>
 	<div class="row">
-		<div class="col span-4">
+		<div class="col span-6">
 			<label class="acc-label">ISO ID you'd like to boot this resource into</label>
 			{{input type="number" value=model.vultrConfig.isoId }}
 		</div>
-		<div class="col span-4">
-		<label class="acc-label">VPC IDs you want to attach to this resource</label>
-			{{input type="text" value=model.vultrConfig.vpcId }}
-	  	</div>
-		<div class="col span-4">
+		<div class="col span-6">
 			<label class="acc-label">App ID of the Vultr Marketplace App to deploy to this resource</label>
 			{{input type="number" value=model.vultrConfig.appId placeholder="0" }}
 		</div>
+	</div>
+	<div class="row">
+		<div class="col span-6">
+			<label class="acc-label">VPC IDs you want to attach to this resource</label>
+			{{input type="text" value=model.vultrConfig.vpcIds }}
+	  	</div>
+		<div class="col span-6">
+			<label class="acc-label">SSH Key IDs you'd like installed on this resource (default: Generated)</label>
+			{{input type="text" value=model.vultrConfig.sshKeyIds }}
+	  	</div>
 	</div>
 	<div class="row">
 		<div class="col span-6">

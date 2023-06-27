@@ -49,8 +49,8 @@
     </div>
 	<div class="row">
 		<div class="col span-6">
-			<label class="acc-label">Tags you'd like to attach to this resource</label>
-			{{input type="text" value=model.vultrConfig.tags }}
+			<label class="acc-label">Tags you'd like to attach to this resource (comma seperated)</label>
+			<input autocomplete="off" autocapitalize="none" class="ember-text-field ember-view" type="text" value={{model.vultrConfig.tmpTags}} onchange={{action 'setTags' value="target.value" }} />
 		</div>
 		<div class="col span-6">
 			<label class="acc-label">Operating system ID (default: [387] Ubuntu 20.04)</label>
@@ -73,12 +73,12 @@
 	</div>
 	<div class="row">
 		<div class="col span-6">
-			<label class="acc-label">VPC IDs you want to attach to this resource</label>
-			{{input type="text" value=model.vultrConfig.vpcIds }}
+			<label class="acc-label">VPC IDs you want to attach to this resource (comma seperated)</label>
+			<input autocomplete="off" autocapitalize="none" class="ember-text-field ember-view" type="text" value={{model.vultrConfig.tmpVpcIds}} onchange={{action 'setVpc' value="target.value" }} />
 	  	</div>
 		<div class="col span-6">
-			<label class="acc-label">SSH Key IDs you'd like installed on this resource (default: Generated)</label>
-			{{input type="text" value=model.vultrConfig.sshKeyIds }}
+			<label class="acc-label">SSH Key IDs you'd like installed on this resource (comma seperated)</label>
+			<input autocomplete="off" autocapitalize="none" class="ember-text-field ember-view" type="text" value={{model.vultrConfig.tmpSshKeyIds}} onchange={{action 'setSsh' value="target.value" }} />
 	  	</div>
 	</div>
 	<div class="row">

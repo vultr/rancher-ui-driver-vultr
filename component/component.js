@@ -63,8 +63,11 @@ export default Ember.Component.extend(NodeDriver, {
 	  "sendActivationEmail": false,
 	  "snapshotId": "",
 	  "sshKeyIds": null,
+	  "tmpSshKeyIds": null,
 	  "startupScriptId": "",
+	  "tmpTags": null,
 	  "tags": null,
+	  "tmpVpcIds": null,
 	  "vpcIds": null,
 	  "vpsBackups": false,
 	  "vpsPlan": "vc2-1c-2gb"
@@ -119,6 +122,18 @@ export default Ember.Component.extend(NodeDriver, {
         })
       })
     },
+	setSsh: function (value) {
+		let sshArray = value.split(',');
+		this.set('model.%%DRIVERNAME%%Config.sshKeyIds', sshArray);
+	},
+	setTags: function (value) {
+		let tagArray = value.split(',');
+		this.set('model.%%DRIVERNAME%%Config.tags', tagArray);
+	},
+	setVpc: function (value) {
+		let vpcArray = value.split(',');
+		this.set('model.%%DRIVERNAME%%Config.vpcIds', vpcArray);
+	},
     setLabels: function(labels){
       let labels_list = labels.map(l => l.key + "=" + l.value);
       this.set('model.%%DRIVERNAME%%Config.serverLabel', labels_list);

@@ -8,7 +8,7 @@ Rancher 2.X UI driver for [Vultr](https://www.vultr.com).
 
 | Key | Value |
 | --- | ----- |
-| Download URL | `https://github.com/vultr/docker-machine-driver-vultr/archive/refs/tags/v2.0.0.tar.gz` |
+| Download URL | `https://github.com/vultr/docker-machine-driver-vultr/releases/download/v2.1.0/docker-machine-driver-vultr` |
 | Custom UI URL | `https://sjc1.vultrobjects.com/rancher-ui/component.js` |
 | Whitelist Domains |  `api.vultr.com, sjc1.vultrobjects.com` |
 
